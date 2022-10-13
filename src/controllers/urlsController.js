@@ -39,7 +39,7 @@ async function shortenUrl(req, res) {
     }
 }
 
-async function getUrls(req, res) {
+async function getUrl(req, res) {
     const { id } = req.params;
 
     try {
@@ -56,4 +56,25 @@ async function getUrls(req, res) {
     }
 }
 
-export { shortenUrl, getUrls };
+async function openUrl(req, res) {
+    const { shortUrl } = req.params;
+
+    try {
+        const shortUrlExist = await connection.query('SELECT * FROM urls WHERE short_url = $1', [shortUrl]);
+        if(shortUrlExist.rowCount === 0) {
+            return res.sendStatus(404);
+        }
+
+        const urlId = shortUrlExist.rows[0].id;
+        const siteUrl = shortUrlExist.rows[0].url;
+        let visitsCount = (await connection.query('SELECT * FROM visits WHERE url_id = $1', [urlId])).rows[0].visit_count;
+
+        await connection.query('UPDATE visits SET visit_count = $1 WHERE url_id = $2', [(visitsCount += 1), urlId]);
+
+        res.redirect(siteUrl);
+    } catch (error) {
+        res.status(500).send(error.message);
+    }
+}
+
+export { shortenUrl, getUrl, openUrl };
