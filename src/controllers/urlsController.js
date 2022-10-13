@@ -39,4 +39,21 @@ async function shortenUrl(req, res) {
     }
 }
 
-export { shortenUrl };
+async function getUrls(req, res) {
+    const { id } = req.params;
+
+    try {
+        const urlIdExist = await connection.query('SELECT id FROM urls WHERE id = $1', [id]);
+        if(urlIdExist.rowCount === 0) {
+            return res.sendStatus(404);
+        }
+
+        const getUrlInfo = await connection.query('SELECT id, short_url AS "shortUrl", url FROM urls WHERE id = $1', [id]);
+        const urlExist = getUrlInfo.rows[0]
+        res.status(200).send(urlExist);
+    } catch (error) {
+        res.status(500).send(error.message);
+    }
+}
+
+export { shortenUrl, getUrls };
