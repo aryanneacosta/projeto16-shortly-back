@@ -10,7 +10,22 @@ CREATE TABLE users (
 
 CREATE TABLE sessions (
 	id SERIAL PRIMARY KEY,
-	user_id INT REFERENCES "users"("id"),
+	user_id INT REFERENCES "users"("id") NOT NULL,
 	token VARCHAR(500) UNIQUE NOT NULL,
+	created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE urls (
+	id SERIAL PRIMARY KEY,
+	user_id INT REFERENCES "users"("id") NOT NULL,
+	url TEXT NOT NULL,
+	short_url TEXT NOT NULL,
+	created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE visits (
+	id SERIAL PRIMARY KEY,
+	url_id INT REFERENCES "urls"("id") NOT NULL,
+	visit_count INT DEFAULT 0 NOT NULL,
 	created_at TIMESTAMP DEFAULT NOW()
 );
