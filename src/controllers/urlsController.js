@@ -77,4 +77,38 @@ async function openUrl(req, res) {
     }
 }
 
-export { shortenUrl, getUrl, openUrl };
+async function deleteUrl(req, res) {
+    const { id } = req.params;
+    const { authorization } = req.headers;
+    const token = authorization?.replace('Bearer ', '');
+
+    if(!token) {
+        return res.sendStatus(401);
+    }
+
+    try {
+        const session = await connection.query('SELECT * FROM sessions WHERE token = $1', [token]);
+        if(session.rowCount === 0) {
+            return res.sendStatus(401);
+        }
+
+        const urlToDelete = await connection.query('SELECT * FROM urls WHERE id = $1', [id]);
+        if(urlToDelete.rowCount === 0) {
+            return res.sendStatus(404);
+        }
+
+        const userIdLogged = session.rows[0].user_id;
+        const userIdUrlOwner = urlToDelete.rows[0].user_id;
+        if(userIdLogged !== userIdUrlOwner) {
+            return res.sendStatus(401);
+        }
+
+        await connection.query('DELETE FROM urls WHERE id = $1', [id]);
+        await connection.query('DELETE FROM visits WHERE url_id = $1', [id]);
+        res.sendStatus(204);
+    } catch (error) {
+        res.status(500).send(error.message);
+    }
+}      
+
+export { shortenUrl, getUrl, openUrl, deleteUrl };
