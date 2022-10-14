@@ -32,11 +32,23 @@ async function user(req, res) {
     } catch (error) {
         res.status(500).send(error.message);
     }
-        
 }
 
 async function ranking(req, res) {
+    try {
+        const rank = (await connection.query('SELECT users.id AS id, users.name AS name, COUNT(urls.id) AS "linksCount", SUM(visits.visit_count) AS "visitCount" FROM users LEFT JOIN urls ON users.id = urls.user_id LEFT JOIN visits ON urls.id = visits.url_id GROUP BY users.id, users.name ORDER BY "linksCount" DESC LIMIT 10')).rows;
 
+        const ranked = rank.map((rank) => ({
+            id: rank['id'],
+            name: rank['name'],
+            linksCount: rank['linksCount'],
+            visitCount: rank['visitCount']
+        }));
+
+        res.status(200).send(ranked);
+    } catch (error) {
+        res.status(500).send(error.message);
+    }
 }
 
-export { user, ranking};
+export { user, ranking };
