@@ -20,8 +20,8 @@ async function user(req, res) {
             return res.sendStatus(404);
         }
 
-        const userInfo = (await connection.query('SELECT users.id AS id, users.name AS name, SUM(visits.visit_count) AS "visitCount" FROM users JOIN urls ON users.id = urls.user_id JOIN visits ON urls.id = visits.url_id GROUP BY users.id, users.name')).rows[0];
-        const shortenedUrlsInfo = (await connection.query('SELECT urls.id AS id, urls.short_url AS "shortUrl", urls.url AS url, visits.visit_count AS "visitCount" FROM urls JOIN visits ON urls.id = visits.url_id')).rows;
+        const userInfo = (await connection.query('SELECT users.id AS id, users.name AS name, COUNT(visit_count.id) AS "visitCount" FROM users JOIN urls ON users.id = urls.user_id JOIN visit_count ON urls.id = visit_count.url_id GROUP BY users.id, users.name')).rows[0];
+        const shortenedUrlsInfo = (await connection.query('SELECT urls.id AS id, urls.short_url AS "shortUrl", urls.url AS url, COUNT(visit_count.id) AS "visitCount" FROM urls JOIN visit_count ON urls.id = visit_count.url_id GROUP BY urls.id')).rows;
 
         res.status(200).send({
             id: userInfo.id,
@@ -36,7 +36,7 @@ async function user(req, res) {
 
 async function ranking(req, res) {
     try {
-        const rank = (await connection.query('SELECT users.id AS id, users.name AS name, COUNT(urls.id) AS "linksCount", SUM(visits.visit_count) AS "visitCount" FROM users LEFT JOIN urls ON users.id = urls.user_id LEFT JOIN visits ON urls.id = visits.url_id GROUP BY users.id, users.name ORDER BY "linksCount" DESC LIMIT 10')).rows;
+        const rank = (await connection.query('SELECT users.id AS id, users.name AS name, COUNT(urls.user_id) AS "linksCount", COUNT(visit_count.id) AS "visitCount" FROM users LEFT JOIN urls ON users.id = urls.user_id LEFT JOIN visit_count ON urls.id = visit_count.url_id GROUP BY users.id, users.name ORDER BY "visitCount" DESC, "linksCount" DESC LIMIT 10')).rows;
 
         const ranked = rank.map((rank) => ({
             id: rank['id'],

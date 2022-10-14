@@ -29,10 +29,7 @@ async function shortenUrl(req, res) {
 
         const urlShortened = await connection.query('SELECT * FROM urls WHERE short_url = $1', [shortUrl]);
 
-        const urlId = urlShortened.rows[0].id;
         const shortUrlAdded = urlShortened.rows[0].short_url;
-
-        await connection.query('INSERT INTO visits (url_id) VALUES ($1)', [urlId]);
         res.status(201).send(shortUrlAdded);
     } catch (error) {
         res.status(500).send(error.message);
@@ -67,9 +64,8 @@ async function openUrl(req, res) {
 
         const urlId = shortUrlExist.rows[0].id;
         const siteUrl = shortUrlExist.rows[0].url;
-        let visitsCount = (await connection.query('SELECT * FROM visits WHERE url_id = $1', [urlId])).rows[0].visit_count;
 
-        await connection.query('UPDATE visits SET visit_count = $1 WHERE url_id = $2', [(visitsCount += 1), urlId]);
+        await connection.query('INSERT INTO visit_count(url_id) VALUES ($1)', [urlId]);
 
         res.redirect(siteUrl);
     } catch (error) {
@@ -104,7 +100,7 @@ async function deleteUrl(req, res) {
         }
 
         await connection.query('DELETE FROM urls WHERE id = $1', [id]);
-        await connection.query('DELETE FROM visits WHERE url_id = $1', [id]);
+        await connection.query('DELETE FROM visit_count WHERE url_id = $1', [id]);
         res.sendStatus(204);
     } catch (error) {
         res.status(500).send(error.message);

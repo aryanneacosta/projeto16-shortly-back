@@ -23,9 +23,8 @@ CREATE TABLE urls (
 	created_at TIMESTAMP DEFAULT NOW()
 );
 
-CREATE TABLE visits (
+CREATE TABLE visit_count (
 	id SERIAL PRIMARY KEY,
 	url_id INT REFERENCES "urls"("id") NOT NULL,
-	visit_count INT DEFAULT 0 NOT NULL,
 	created_at TIMESTAMP DEFAULT NOW()
 );
