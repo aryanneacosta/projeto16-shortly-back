@@ -20,8 +20,10 @@ async function user(req, res) {
             return res.sendStatus(404);
         }
 
-        const userInfo = (await connection.query('SELECT users.id AS id, users.name AS name, COUNT(visit_count.id) AS "visitCount" FROM users JOIN urls ON users.id = urls.user_id JOIN visit_count ON urls.id = visit_count.url_id GROUP BY users.id, users.name')).rows[0];
-        const shortenedUrlsInfo = (await connection.query('SELECT urls.id AS id, urls.short_url AS "shortUrl", urls.url AS url, COUNT(visit_count.id) AS "visitCount" FROM urls JOIN visit_count ON urls.id = visit_count.url_id GROUP BY urls.id')).rows;
+        const userExistId = userExist.rows[0].id;
+
+        const userInfo = (await connection.query('SELECT users.id AS id, users.name AS name, COUNT(visit_count.user_id) AS "visitCount" FROM users  LEFT JOIN urls ON users.id = urls.user_id LEFT JOIN visit_count ON urls.id = visit_count.url_id WHERE users.id = $1 GROUP BY users.id, users.name', [userExistId])).rows[0];
+        const shortenedUrlsInfo = (await connection.query('SELECT urls.id AS id, urls.short_url AS "shortUrl", urls.url AS url, COUNT(visit_count.url_id) AS "visitCount" FROM urls LEFT JOIN visit_count ON urls.id = visit_count.url_id WHERE urls.user_id = $1 GROUP BY urls.id', [userExistId])).rows;
 
         res.status(200).send({
             id: userInfo.id,

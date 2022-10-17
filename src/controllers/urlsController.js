@@ -63,9 +63,10 @@ async function openUrl(req, res) {
         }
 
         const urlId = shortUrlExist.rows[0].id;
+        const userId = shortUrlExist.rows[0].user_id;
         const siteUrl = shortUrlExist.rows[0].url;
 
-        await connection.query('INSERT INTO visit_count(url_id) VALUES ($1)', [urlId]);
+        await connection.query('INSERT INTO visit_count(user_id, url_id) VALUES ($1, $2)', [userId, urlId]);
 
         res.redirect(siteUrl);
     } catch (error) {
